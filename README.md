@@ -18,6 +18,8 @@ scraper do swiezego info, wersja dwa
 
     ```https://www.olx.pl/nieruchomosci/mieszkania/wynajem/poznan/?search%5Bfilter_float_price:to%5D=3000&search%5Bfilter_enum_rooms%5D%5B0%5D=two```
 
+    ![setup](/doc/setup.png)
+
 4. odpal *fiolxs*:
 
     ```
