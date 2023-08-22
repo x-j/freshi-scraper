@@ -81,7 +81,7 @@ class FiolxSpider(Spider):
         assert "www.otodom.pl/pl/oferta" in response.url
 
         content_div = response.css('css-y6l269.er0e7w63')
-        if validate_oferta(self, response, content_div):
+        if self.validate_oferta(response, content_div):
             item = FreshItem()
             # TODO
 
@@ -90,7 +90,7 @@ class FiolxSpider(Spider):
         assert "www.olx.pl/d/oferta" in response.url
 
         content_div = response.css('div.css-1wws9er')
-        if validate_oferta(self, response, content_div.css('div.css-bgzo2k.er34gjf0')):
+        if self.validate_oferta(response, content_div.css('div.css-bgzo2k.er34gjf0')):
             item = FreshItem()
             item['smieszna_nazwa'] = voynich_generator()
             item['oryg_nazwa'] = content_div.xpath('div[2]/h1/text()').get()
