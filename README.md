@@ -23,7 +23,7 @@ scraper do swiezego info, wersja dwa
     ```
     scrapy crawl fiolxs -a search_url="TWOJ LINK Z OLX"
     ```
-
+    zwróć uwagę na to że link musi (?) znajdować się między cudzysłowami. i zwróć też uwagę na spacje, niech będą tak jak w przykladzie powyzej. 
     sugeruję jeszcze dać flagę `-L INFO` żeby nie zaspamować sobie terminala za bardzo
 
 5. zajrzyj do folderu `out` sprawdzić rezultaty
