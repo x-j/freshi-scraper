@@ -8,9 +8,9 @@ scraper do swiezego info, wersja dwa
 
 1. zainstaluj potrzebne pythonowe moduły:
 
-  ```
-  pip install -r requirements.txt
-```
+    ```
+    pip install -r requirements.txt
+    ```
 
 2. odwiedź folder [`curses`](/freshis/curses/README.md) i skonfiguruj swoje klątwy w plikach .csv które tam znajdziesz
 
