@@ -73,19 +73,34 @@ class FiolxSpider(Spider):
         self.start_urls = [search_url]
     
 
-    def parse_oferta(self, response):
-        assert "olx.pl/d/oferta" in response.url
+    def parse_otooferta(self, response):
+        assert "www.otodom.pl/pl/oferta" in response.url
+
+        content_div = response.css('css-y6l269.er0e7w63')
+
+        item = FreshItem()
+
+
+    def parse_olxoferta(self, response):
+        assert "www.olx.pl/d/oferta" in response.url
         # load curses
-        curses = self.cursed_regexii.copy()
+        c_regexii = self.cursed_regexii.copy()
+        c_miejsca = pd.DataFrame({'miejsce': pd.concat([self.cursed_miejsca.miejsce, self.cursed_miejsca.fraza])})
 
         content_div = response.css('div.css-1wws9er')
         opis_raw = unidecode(content_div.css('div.css-bgzo2k.er34gjf0').get().lower())
 
-        curses['hits'] = curses.regex.apply(lambda x: re.search(x, opis_raw))
-        hits = curses.hits[~curses.hits.isna()]
+        c_miejsca['hits'] = c_miejsca.miejsce.apply(lambda x: x in opis_raw)
+        hits = c_miejsca[c_miejsca.hits]
+        if len(hits) > 0:
+            self.logger.info(f"Dropping {self.shorten_url(response.url)} due to cursed miejsca in opis: {', '.join(hits.miejsce.to_list())}")
+            return
 
+        c_regexii['hits'] = c_regexii.regex.apply(lambda x: re.search(x, opis_raw))
+        hits = c_regexii.hits[~c_regexii.hits.isna()]
         if len(hits) > 0:
             self.logger.info(f"Dropping {self.shorten_url(response.url)} due to cursed regexi in opis: {', '.join(hits.apply(lambda x: x.group(0)).to_list())}")
+            return
 
         item = FreshItem()
         item['smieszna_nazwa'] = voynich_generator()
@@ -94,30 +109,35 @@ class FiolxSpider(Spider):
         item['czynsz_dodatkowo'] = int(re.search(r"[0-9]+",content_div.xpath('ul/li[last()]/p[@class="css-b5m1rv er34gjf0"]/text()').get())[0])
         item['url'] = response.url
         # TODO: more
-
         yield item
 
 
     def parse(self, response):
-        # load curses
+        # load curses and old links
         self.cursed_regexii = pd.read_csv(self.settings.get('CURSED_REGEXII_PATH'))
         self.cursed_regexii.regex = self.cursed_regexii.regex.apply(lambda x: re.compile(unidecode(x).lower()))
-        cursed_miejsca = pd.read_csv(self.settings.get('CURSED_MIEJSCA_PATH')).apply(lambda x: x.str.lower().apply(unidecode))
+        self.cursed_miejsca = pd.read_csv(self.settings.get('CURSED_MIEJSCA_PATH')).apply(lambda x: x.str.lower().apply(unidecode))
+        try:
+            old_links = pd.read_csv(self.settings.get('FEED_URI')).url
+        except pd.errors.EmptyDataError: 
+            old_links = pd.Series()
 
         # parse otodom elsewhere
         if "olx.pl/d/oferta" in response.url:
-            self.logger.info("The provided search_url is an oferta. Parsing the oferta.")
-            yield from self.parse_oferta(response)
+            self.logger.info("The provided search_url is an olx oferta. Parsing the oferta.")
+            yield from self.parse_olxoferta(response)
         elif "olx.pl" in response.url:
             ofertas = response.css('div.css-1sw7q4x[data-cy="l-card"]')
             good_links = []
 
             for o in ofertas:
-                o_title = unidecode(o.css('h6').get().lower())
                 link = o.xpath('a/@href').get()
+                if any(old_links == link):
+                    continue
+                o_title = unidecode(o.css('h6').get().lower())
                 hits = pd.DataFrame(
-                    {'miejsca': cursed_miejsca.miejsce.apply(lambda x: x in o_title),
-                       'frazy':   cursed_miejsca.fraza.apply(lambda x: x in o_title)}
+                    {'miejsca': self.cursed_miejsca.miejsce.apply(lambda x: x in o_title),
+                       'frazy':   self.cursed_miejsca.fraza.apply(lambda x: x in o_title)}
                 )
                 if any(hits.miejsca) or any(hits.frazy):
                     # TODO: explain which miejsca or frazy?
@@ -125,9 +145,7 @@ class FiolxSpider(Spider):
                     continue
                 good_links.append(link)
             
-            # TODO: here filter out 
-            # good_links = filter(lambda x: x not in old_links, good_links)
-            yield from response.follow_all(good_links, self.parse_oferta)
+            yield from response.follow_all(good_links, self.parse_olxoferta)
 
         else:
             self.logger.error("Unexpected url: " + response.url)
