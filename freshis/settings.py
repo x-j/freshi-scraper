@@ -23,7 +23,10 @@ FEEDS = {
 CURSED_MIEJSCA_PATH = "freshis/curses/miejsca.csv"
 CURSED_REGEXII_PATH = "freshis/curses/regexy.csv"
 
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Firefox/114.0'
+# try some
+# USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_7_9) AppleWebKit/605.1.15 (KHTML, like Gecko) Firefox/114.0'
+# USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/615.2.9 (KHTML, like Gecko) Chrome/116.0.5845.118 Safari/615.2.9'
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_7_9) AppleWebKit/615.2.9 (KHTML, like Gecko) Chrome/116.0.5845.118 Safari/615.2.9'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False # ;)
@@ -60,8 +63,9 @@ ROBOTSTXT_OBEY = False # ;)
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+    # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'freshis.middlewares.FreshisSpiderMiddleware': 10,
+    'freshis.middlewares.FiolxRetryMiddleware': 399,
     # 'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
     # 'scrapy_fake_useragent.middleware.RetryUserAgentMiddleware': 401,
 }

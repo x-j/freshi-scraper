@@ -5,9 +5,11 @@
 
 import logging
 import random
+import cloudscraper
 
 from scrapy import signals
 from scrapy.exceptions import CloseSpider
+from scrapy.http import TextResponse, HtmlResponse, Response
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -84,6 +86,8 @@ class FreshisDownloaderMiddleware:
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
 
+    scraper = cloudscraper.create_scraper()
+
     @classmethod
     def from_crawler(cls, crawler):
         # This method is used by Scrapy to create your spiders.
@@ -101,7 +105,11 @@ class FreshisDownloaderMiddleware:
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        return None
+
+        r = self.scraper.get(request.url)
+        text = r.text[r.text.find('<body>'):r.text.find('</html')]
+        return HtmlResponse(request.url, status=r.status_code, headers=r.headers, body=r.text,
+                            encoding = "utf-8", request=request)
 
     def process_response(self, request, response, spider):
         # Called with the response returned from the downloader.
