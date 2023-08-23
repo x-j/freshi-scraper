@@ -36,20 +36,12 @@ class FiolxSpider(Spider):
     allowed_domains = ["www.olx.pl", "www.otodom.pl"]
     # handle_httpstatus_list = [403]
     
-    custom_settings = {     # to attempt retry middleware
-        'DOWNLOADER_MIDDLEWARES' : {
-            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-            'freshis.middlewares.FiolxRetryMiddleware': 399,
-            # 'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
-            # 'scrapy_fake_useragent.middleware.RetryUserAgentMiddleware': 401,
-        }
-    }
-
     shorten_url = lambda self, url: url[url.find('oferta/')+7:]
 
 
     def __init__(self, search_url, name=None, **kwargs):
         super().__init__(name, **kwargs)
+        self.search_url = search_url
         self.start_urls = [search_url]
     
 
@@ -80,10 +72,18 @@ class FiolxSpider(Spider):
     def parse_otooferta(self, response):
         assert "www.otodom.pl/pl/oferta" in response.url
 
-        content_div = response.css('css-y6l269.er0e7w63')
-        if self.validate_oferta(response, content_div):
+        content_div = response.xpath('/html/body/div/main/div/div[2]')
+        if self.validate_oferta(response, content_div.xpath('section[3]')):
             item = FreshItem()
-            # TODO
+            item['smieszna_nazwa'] = voynich_generator()
+            item['oryg_nazwa'] = content_div.xpath('header/h1/text()').get()
+            item['czynsz_bazowy'] = int(re.search(r"[0-9]+", content_div.xpath('header/strong/text()').get().replace(' ',''))[0])
+            czynsz_div = content_div.xpath('div[1]/div/div[2]/div[2]/div/text()').get()
+            if czynsz_div is not None:
+                item['czynsz_dodatkowo'] = int(re.search(r"[0-9]+", czynsz_div.replace(' ',''))[0])
+            item['url'] = response.url
+            # TODO: more
+            yield item
 
 
     def parse_olxoferta(self, response):
@@ -95,10 +95,18 @@ class FiolxSpider(Spider):
             item['smieszna_nazwa'] = voynich_generator()
             item['oryg_nazwa'] = content_div.xpath('div[2]/h1/text()').get()
             item['czynsz_bazowy'] = int(content_div.xpath('div[3]/h3/text()').get().replace('zł','').replace(' ',''))
-            item['czynsz_dodatkowo'] = int(re.search(r"[0-9]+",content_div.xpath('ul/li[last()]/p[@class="css-b5m1rv er34gjf0"]/text()').get())[0])
+            item['czynsz_dodatkowo'] = int(re.search(r"[0-9]+",content_div.xpath('ul/li[last()]/p[@class="css-b5m1rv er34gjf0"]/text()').get().replace(' ',''))[0])
             item['url'] = response.url
             # TODO: more
             yield item
+
+
+    def parse_oferta(self, response):
+        if "olx.pl/d/oferta" in response.url:
+            yield from self.parse_olxoferta(response)
+
+        elif "otodom.pl/pl/oferta/" in response.url:
+            yield from self.parse_otooferta(response)
 
 
     def parse(self, response):
@@ -111,12 +119,10 @@ class FiolxSpider(Spider):
         except pd.errors.EmptyDataError: 
             old_links = pd.Series()
 
-        if "olx.pl/d/oferta" in response.url:
-            self.logger.info("The provided search_url is an olx oferta. Parsing the oferta.")
-            yield from self.parse_olxoferta(response)
-        elif "otodom.pl/pl/oferta/" in response.url:
-            self.logger.info("The provided search_url is an otodom oferta. Parsing the oferta.")
-            yield from self.parse_otooferta(response)
+        if "oferta" in response.url:
+            self.logger.info("The provided search_url is an oferta. Parsing the oferta.")
+            yield from self.parse_oferta(response)
+        
         elif "olx.pl" in response.url:
             good_links = []
             ofertas = response.css('div.css-1sw7q4x[data-cy="l-card"]')
@@ -136,5 +142,5 @@ class FiolxSpider(Spider):
                     continue
                 good_links.append(link)
             
-            yield from response.follow_all(good_links, self.parse_olxoferta)
+            yield from response.follow_all(good_links, self.parse_oferta)
 
