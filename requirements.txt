@@ -3,3 +3,5 @@ pandas
 requests
 scrapy
 unidecode
+schedule
+argparse
