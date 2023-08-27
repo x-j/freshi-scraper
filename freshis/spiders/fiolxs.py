@@ -90,6 +90,8 @@ class FiolxSpider(Spider):
         assert "www.olx.pl/d/oferta" in response.url
 
         content_div = response.css('div.css-1wws9er')
+        if content_div is None:
+            content_div = response.css('main section[role="region"]')
         if self.validate_oferta(response, content_div.css('div.css-bgzo2k.er34gjf0')):
             item = FreshItem()
             item['smieszna_nazwa'] = voynich_generator()
