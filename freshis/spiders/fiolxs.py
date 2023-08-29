@@ -73,7 +73,7 @@ class FiolxSpider(Spider):
         assert "www.otodom.pl/pl/oferta" in response.url
 
         content_div = response.xpath('/html/body/div/main/div/div[2]')
-        if self.validate_oferta(response, content_div.xpath('section[3]')):
+        if self.validate_oferta(response, content_div.xpath('section[@role]')):
             item = FreshItem()
             item['smieszna_nazwa'] = voynich_generator()
             item['oryg_nazwa'] = content_div.xpath('header/h1/text()').get()
@@ -117,7 +117,7 @@ class FiolxSpider(Spider):
         self.cursed_regexy.regex = self.cursed_regexy.regex.apply(lambda x: re.compile(unidecode(x).lower()))
         self.cursed_miejsca = pd.read_csv(self.settings.get('CURSED_MIEJSCA_PATH')).apply(lambda x: x.str.lower().apply(unidecode))
         try:
-            old_links = pd.read_csv(self.settings.get('FEED_URI')).url
+            old_links = pd.concat([pd.read_csv(uri) for uri in self.settings.get('FEEDS').keys() if uri.endswith('csv')]).url
         except pd.errors.EmptyDataError: 
             old_links = pd.Series()
 
@@ -131,7 +131,7 @@ class FiolxSpider(Spider):
 
             for o in ofertas:
                 link = o.xpath('a/@href').get()
-                if any(old_links == link):
+                if any(old_links.str.endswith(link)):
                     continue
                 o_title = unidecode(o.css('h6').get().lower())
                 hits = pd.DataFrame(

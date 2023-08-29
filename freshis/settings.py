@@ -12,13 +12,13 @@ BOT_NAME = "freshis"
 SPIDER_MODULES = ["freshis.spiders"]
 NEWSPIDER_MODULE = "freshis.spiders"
 
-FEED_URI = "out/fresh-info.csv"
 FEEDS = {
     "out/fresh-info.csv" : {
-        'format': 'csv',
-         "csv": "scrapy.exporters.CsvItemExporter"
+        'format': 'csv'
     }
 }
+FEED_EXPORT_ENCODING = "utf-8"
+FEED_EXPORT_FIELDS = ["smieszna_nazwa","oryg_nazwa","czynsz_bazowy","czynsz_dodatkowo","url",]
 
 CURSED_MIEJSCA_PATH = "freshis/curses/miejsca.csv"
 CURSED_REGEXII_PATH = "freshis/curses/regexy.csv"
@@ -112,5 +112,3 @@ FAKEUSERAGENT_PROVIDERS = [
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-FEED_EXPORT_ENCODING = "utf-8"
-FEED_EXPORT_FIELDS = ["smieszna_nazwa","oryg_nazwa","czynsz_bazowy","czynsz_dodatkowo","url",]
