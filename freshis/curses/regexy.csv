@@ -2,6 +2,6 @@ regex
 "(przechodni salon)|(salon (jest )?przechodni)"
 "(pokój (jest )?przechodni)"
 "otwart(a|(ej)) kuchnia?"
-"(tylko)|(oferta) dla niepalących"
+"(tylko|oferta) dla niepalących"
 "(salonu?|pokoju?( dzienn?(y|(ego)))?)( ?\(?(o? ?p?o?w?(\.|i?e?r?z?chni)?)? ?[0-9]*m?2?\)?)?( jest)?(( ?połączon(y|ego))| (poł)?otwart(y|ego))? ?(z|na) ?( otwart(a|ym))? ?(aneks(em)? kuchennym?|kuchni)"
 "kuchni[ae]? (jest )?((wychodząc)|(połączon)|(pół)?otwart)(a|ej) (na|z) ((salon(em)?)|(pokoj(em)?( dziennym)?))"
